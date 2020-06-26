@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cy.mapper.UserMapper">
+    <select id="getUserCountByDeptId"
+            resultType="int">
+         select count(*) from sys_users where deptId=#{deptId}
+    </select>
+
+    <select id="findObjectsPage" resultType="com.cy.entity.User">
+        select * from sys_users
+        <where>
+            <if test="username!=null and username!=''">
+                username like concat ("%",#{username},"%")
+            </if>
+        </where>
+        order by createdTime desc
+        limit #{startIndex},#{pageSize}
+    </select>
+    <select id="userCountByUsername" resultType="int">
+        select count(*) from sys_users
+        <where>
+            <if test="username!=null and username!=''">
+                username like concat ("%",#{username},"%")
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="sysUserMap"
+               type="com.cy.vo.UserDeptVo">
+        <!-- 关联查询：
+                association:多对一或一对一
+                collection:一对多 -->
+        <association property="sysDept"
+                     column="deptId"
+                     select="com.cy.mapper.DeptMapper.findById">
+        </association>
+    </resultMap>
+    <select id="findPageObjects"
+            resultMap="sysUserMap">
+        select * from sys_users
+        <include refid="queryWhereId"/>
+        order by createdTime desc
+        limit #{startIndex},#{pageSize}
+    </select>
+    <select id="getRowCount"
+            resultType="int">
+        select count(*) from sys_users
+        <include refid="queryWhereId"/>
+    </select>
+    <sql id="queryWhereId">
+        <where>
+            <if test="username!=null and username!=''">
+                username like concat("%",#{username},"%")
+            </if>
+        </where>
+    </sql>
+
+    <update id="validById">
+       update sys_users
+       set valid=#{valid},
+           modifiedUser=#{modifiedUser},
+           modifiedTime=now()
+       where id=#{id}
+
+   </update>
+
+    <insert id="insertObject"
+            parameterType="com.cy.entity.User"
+            useGeneratedKeys="true"
+            keyProperty="id">
+      insert into sys_users
+      (username,password,deptId,email,mobile,salt,valid,
+      createdTime,modifiedTime,createdUser,modifiedUser)
+      values
+    (#{username},#{password},#{deptId},#{email},#{mobile},#{salt},#{valid},
+      now(),now(),#{createdUser},#{modifiedUser})
+   </insert>
+
+    <select id="findObjectById"
+            parameterType="int"
+            resultType="com.cy.vo.UserDeptVo">
+           select * from sys_users
+           where id=#{id}
+   </select>
+
+    <update id="updateObject" parameterType="com.cy.entity.User">
+        update sys_users
+        <set>
+            <if test="username!=null and username!=''">
+                username=#{username},
+            </if>
+            <if test="email!=null and email!=''">
+                email=#{email},
+            </if>
+            <if test="mobile!=null and mobile!=''">
+                mobile=#{mobile},
+            </if>
+            <if test="deptId!=null and deptId!=''">
+                deptId=#{deptId},
+            </if>
+
+            <if test="modifiedUser!=null and modifiedUser!=''">
+                modifiedUser=#{modifiedUser},
+            </if>
+            modifiedTime=now()
+        </set>
+        where id=#{id}
+    </update>
+    <update id="updatePassword">
+         update sys_users
+         set password=#{password},
+             salt=#{salt},
+             modifiedTime=now()
+         where id=#{id}
+  </update>
+
+    <select id="findUserByUserName"
+            resultType="com.cy.entity.User">
+      select * from sys_users
+      where username=#{username}
+   </select>
+
+
+</mapper>
